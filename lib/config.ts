@@ -1,13 +1,13 @@
 /**
- * TaylorWorks product copy, trades, and listing plans.
+ * Key City Listings product copy, trades, and listing plans.
  * Rename the product or adjust plan labels here — the UI reads this module.
  */
 
 export const site = {
-  name: "TaylorWorks",
+  name: "Key City Listings",
   tagline: "Hire a local trade for your Abilene business.",
   description:
-    "TaylorWorks connects contractors with small businesses in Abilene, Texas and nearby Big Country towns. Businesses join free. Contractors subscribe to be listed.",
+    "Key City Listings connects contractors with small businesses in Abilene, Texas and nearby Big Country towns. Businesses join free. Contractors subscribe to be listed.",
   city: "Abilene",
   region: "Big Country",
   state: "Texas",
@@ -19,15 +19,15 @@ export const site = {
  * whenever the Terms or Privacy text changes.
  */
 export const business = {
-  legalName: process.env.BUSINESS_LEGAL_NAME || "TaylorWorks",
+  legalName: process.env.BUSINESS_LEGAL_NAME || "Key City Listings",
   contactEmail: process.env.CONTACT_EMAIL || "hello@example.com",
   location: "Abilene, Texas",
   county: "Taylor County, Texas",
-  policiesUpdated: "October 21, 2026",
+  policiesUpdated: "November 4, 2026",
 } as const;
 
 export const demoAccounts = {
-  password: "taylorworks",
+  password: "keycitylistings",
   customer: {
     email: "nora@elmpinecafe.example",
     label: "Elm & Pine Cafe (business)",

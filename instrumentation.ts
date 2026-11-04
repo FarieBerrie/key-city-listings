@@ -45,7 +45,7 @@ export const onRequestError: Instrumentation.onRequestError = async (error, requ
   if (now - (lastAlert.get(key) ?? 0) < ALERT_GAP_MS) return;
   lastAlert.set(key, now);
 
-  const text = `TaylorWorks error on ${request.method} ${path} (${context.routeType}): ${message.slice(0, 300)}${digest ? ` [digest ${digest}]` : ""}`;
+  const text = `Key City Listings error on ${request.method} ${path} (${context.routeType}): ${message.slice(0, 300)}${digest ? ` [digest ${digest}]` : ""}`;
   try {
     // Slack reads "text" and Discord reads "content"
     await fetch(webhook, {

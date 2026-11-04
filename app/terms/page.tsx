@@ -15,7 +15,7 @@ export default function TermsPage() {
         agree, please don&apos;t use {site.name}.
       </p>
 
-      <Section title="What TaylorWorks is">
+      <Section title="What Key City Listings is">
         <p>
           {site.name} is a local directory and job board that helps businesses in and around {business.location}{" "}
           find independent contractors. We are not a contractor, we don&apos;t employ the contractors listed here,

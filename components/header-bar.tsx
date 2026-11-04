@@ -22,10 +22,10 @@ export function HeaderBar({ user, unread }: { user: HeaderUser; unread: number }
           <span className="font-heading text-xl tracking-tight">{site.name}</span>
           <span className="hidden text-xs text-muted-foreground sm:inline">{site.city}</span>
         </Link>
-        <nav className="hidden items-center gap-1 md:flex">
+        <nav className="hidden items-center gap-1 lg:flex">
           <NavLinks user={user} unread={unread} />
         </nav>
-        <div className="md:hidden">
+        <div className="lg:hidden">
           <Sheet>
             <SheetTrigger
               aria-label="Open menu"

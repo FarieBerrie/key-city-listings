@@ -1,5 +1,5 @@
 {
-  "name": "taylorworks",
+  "name": "key-city-listings",
   "version": "0.1.0",
   "private": true,
   "engines": {
@@ -11,8 +11,8 @@
     "start": "next start -H 0.0.0.0 -p 43123",
     "lint": "eslint",
     "postinstall": "prisma generate",
-    "db:dev": "prisma dev --name taylorworks --detach",
-    "db:stop": "prisma dev stop taylorworks",
+    "db:dev": "prisma dev --name key-city-listings --detach",
+    "db:stop": "prisma dev stop key-city-listings",
     "db:migrate": "prisma migrate deploy",
     "db:seed": "prisma db seed",
     "db:reset": "prisma migrate reset --force"

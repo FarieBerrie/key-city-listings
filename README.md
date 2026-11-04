@@ -1,6 +1,6 @@
-# TaylorWorks
+# Key City Listings
 
-TaylorWorks is a local marketplace that connects contractors with small businesses in Abilene, Texas and nearby Big Country towns. Businesses join free, post job requests, and message contractors. Contractors pay for a monthly listing before their profile appears in the public directory.
+Key City Listings is a local marketplace that connects contractors with small businesses in Abilene, Texas and nearby Big Country towns. Businesses join free, post job requests, and message contractors. Contractors pay for a monthly listing before their profile appears in the public directory.
 
 The product name and the listing plan labels live in [`lib/config.ts`](lib/config.ts). Change `site.name` there and the page titles, header, and footer follow.
 
@@ -33,7 +33,7 @@ The app listens on [http://127.0.0.1:43123](http://127.0.0.1:43123). `http://loc
 - Emails aren't sent in development. They're printed in the terminal running `npm run dev`, so you can click a password-reset link from there.
 - The placeholder `AUTH_SECRET` from `.env.example` works on your own machine, but production refuses to start with it.
 
-`npm run db:seed` wipes and recreates the sample data, and refuses to run against any database that isn't on your machine. Every sample account uses the password `taylorworks`. On your machine, the login page also has one-click buttons for two of them.
+`npm run db:seed` wipes and recreates the sample data, and refuses to run against any database that isn't on your machine. Every sample account uses the password `keycitylistings`. On your machine, the login page also has one-click buttons for two of them.
 
 | Role | Business | Email |
 | --- | --- | --- |
@@ -108,7 +108,7 @@ Stripe reviews your website before switching on live payments. The Terms, Privac
 
 1. In Resend, add your domain and add the DNS records it shows, so mail from your domain is trusted.
 2. Create an API key with sending access and put it in `RESEND_API_KEY`.
-3. Set `EMAIL_FROM` to an address on that domain, such as `TaylorWorks <hello@yourdomain.com>`.
+3. Set `EMAIL_FROM` to an address on that domain, such as `Key City Listings <hello@yourdomain.com>`.
 
 Try "Forgot your password?" on the login page to check it.
 
