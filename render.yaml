@@ -26,7 +26,7 @@ services:
     preDeployCommand: npx prisma migrate deploy
     startCommand: npx next start -H 0.0.0.0 -p $PORT
     healthCheckPath: /api/health
-    autoDeployTrigger: commit
+    autoDeployTrigger: checksPass # waits for GitHub Actions to pass before deploying
     envVars:
       - key: DATABASE_URL
         fromDatabase:
