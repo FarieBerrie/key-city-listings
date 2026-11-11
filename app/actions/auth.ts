@@ -1,12 +1,14 @@
 "use server";
 
 import bcrypt from "bcryptjs";
+import { after } from "next/server";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 
 import { createSession, destroySession } from "@/lib/auth";
 import { cities } from "@/lib/config";
 import { prisma } from "@/lib/db";
+import { sendVerificationEmail } from "@/lib/email-verification";
 import { demoLoginsEnabled } from "@/lib/env";
 import { safeNextPath } from "@/lib/format";
 import { clientIp, rateLimit, retryMessage } from "@/lib/rate-limit";
@@ -142,6 +144,8 @@ export async function signup(_prev: AuthState, formData: FormData): Promise<Auth
     },
     user.sessionVersion,
   );
+  // Sent after the response, so signing up doesn't wait on the email service
+  after(() => sendVerificationEmail(user));
 
   redirect(data.role === "CONTRACTOR" ? "/billing" : "/dashboard");
 }

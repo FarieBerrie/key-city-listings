@@ -84,6 +84,11 @@ export async function resetPassword(_prev: ResetState, formData: FormData): Prom
       where: { id: row.userId },
       data: { passwordHash, sessionVersion: { increment: 1 } },
     }),
+    // The reset link reached their inbox, which proves the address is theirs
+    prisma.user.updateMany({
+      where: { id: row.userId, emailVerifiedAt: null },
+      data: { emailVerifiedAt: new Date() },
+    }),
     prisma.passwordResetToken.update({ where: { id: row.id }, data: { usedAt: new Date() } }),
     prisma.passwordResetToken.deleteMany({ where: { userId: row.userId, id: { not: row.id } } }),
   ]);

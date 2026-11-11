@@ -224,6 +224,8 @@ async function main() {
         name: contractor.name,
         email: contractor.email,
         passwordHash,
+
+        emailVerifiedAt: new Date(),
         role: "CONTRACTOR",
         contractorProfile: {
           create: {
@@ -259,6 +261,8 @@ async function main() {
       name: "Nora Blake",
       email: demoAccounts.customer.email,
       passwordHash,
+
+      emailVerifiedAt: new Date(),
       role: "CUSTOMER",
       customerProfile: {
         create: {
@@ -276,6 +280,8 @@ async function main() {
       name: "Elliot Marsh",
       email: "elliot@saylesbooks.example",
       passwordHash,
+
+      emailVerifiedAt: new Date(),
       role: "CUSTOMER",
       customerProfile: {
         create: {
@@ -293,6 +299,8 @@ async function main() {
       name: "Priya Shah",
       email: "priya@cedarcreekdental.example",
       passwordHash,
+
+      emailVerifiedAt: new Date(),
       role: "CUSTOMER",
       customerProfile: {
         create: {
@@ -310,6 +318,8 @@ async function main() {
       name: "Hank Ruiz",
       email: "hank@mockingbirdstorage.example",
       passwordHash,
+
+      emailVerifiedAt: new Date(),
       role: "CUSTOMER",
       customerProfile: {
         create: {

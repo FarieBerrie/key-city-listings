@@ -21,7 +21,7 @@ export async function notifyNewMessage(input: {
   const [recipient, sender, conversation] = await Promise.all([
     prisma.user.findUnique({
       where: { id: input.recipientId },
-      select: { email: true, name: true, emailMessages: true },
+      select: { email: true, name: true, emailMessages: true, emailVerifiedAt: true },
     }),
     prisma.user.findUnique({
       where: { id: input.senderId },
@@ -36,7 +36,8 @@ export async function notifyNewMessage(input: {
       select: { jobRequest: { select: { title: true } } },
     }),
   ]);
-  if (!recipient?.emailMessages || !sender) return;
+  // Never email an address its owner hasn't confirmed
+  if (!recipient?.emailMessages || !recipient.emailVerifiedAt || !sender) return;
 
   const from = sender.contractorProfile?.businessName ?? sender.customerProfile?.businessName ?? sender.name;
   const about = conversation?.jobRequest ? ` about "${conversation.jobRequest.title}"` : "";

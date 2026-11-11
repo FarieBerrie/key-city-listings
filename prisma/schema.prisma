@@ -9,24 +9,41 @@ datasource db {
 
 /// CONTRACTOR or CUSTOMER
 model User {
-  id             String   @id @default(cuid())
-  email          String   @unique
-  passwordHash   String
-  name           String
-  role           String
+  id              String    @id @default(cuid())
+  email           String    @unique
+  passwordHash    String
+  name            String
+  role            String
   /// Bumped when the password changes, which signs out every existing session
-  sessionVersion Int      @default(0)
+  sessionVersion  Int       @default(0)
   /// Email me when someone sends a message
-  emailMessages  Boolean  @default(true)
-  createdAt      DateTime @default(now())
+  emailMessages   Boolean   @default(true)
+  /// When they proved they own the email address, by its confirmation link or a password reset.
+  /// Until then they can't post jobs, send messages or subscribe to a listing.
+  emailVerifiedAt DateTime?
+  createdAt       DateTime  @default(now())
 
   contractorProfile ContractorProfile?
   customerProfile   CustomerProfile?
-  jobs              JobRequest[]         @relation("PostedJobs")
+  jobs              JobRequest[]             @relation("PostedJobs")
   sentMessages      Message[]
-  contractorThreads Conversation[]       @relation("ContractorThreads")
-  customerThreads   Conversation[]       @relation("CustomerThreads")
+  contractorThreads Conversation[]           @relation("ContractorThreads")
+  customerThreads   Conversation[]           @relation("CustomerThreads")
   resetTokens       PasswordResetToken[]
+  verifyTokens      EmailVerificationToken[]
+}
+
+/// A "confirm your email" link. Only a hash of the token is stored; the token itself is in the
+/// email. Sending a new link deletes the old one, and confirming deletes them all.
+model EmailVerificationToken {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
 }
 
 /// A "forgot password" link. Only a hash of the token is stored; the token itself is in the email.
@@ -72,19 +89,19 @@ model ContractorProfile {
 
 /// BASIC or FEATURED. status: INACTIVE, ACTIVE, PAST_DUE, CANCELED
 model Listing {
-  id                   String    @id @default(cuid())
-  contractorProfileId  String    @unique
+  id                   String            @id @default(cuid())
+  contractorProfileId  String            @unique
   contractor           ContractorProfile @relation(fields: [contractorProfileId], references: [id], onDelete: Cascade)
-  tier                 String    @default("BASIC")
-  status               String    @default("INACTIVE")
+  tier                 String            @default("BASIC")
+  status               String            @default("INACTIVE")
   stripeCustomerId     String?
-  stripeSubscriptionId String?   @unique
+  stripeSubscriptionId String?           @unique
   currentPeriodEnd     DateTime?
   /// Canceled in Stripe's customer portal: stays listed until currentPeriodEnd, then ends
-  cancelAtPeriodEnd    Boolean   @default(false)
+  cancelAtPeriodEnd    Boolean           @default(false)
   activatedAt          DateTime?
-  createdAt            DateTime  @default(now())
-  updatedAt            DateTime  @updatedAt
+  createdAt            DateTime          @default(now())
+  updatedAt            DateTime          @updatedAt
 }
 
 model ContractorTrade {
