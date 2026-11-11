@@ -31,7 +31,7 @@ export async function createJob(_prev: FormState, formData: FormData): Promise<F
   const parsed = jobSchema.safeParse({
     title: formData.get("title"),
     description: formData.get("description"),
-    trade: formData.get("trade"),
+    trade: formData.get("trade") ?? "",
     city: formData.get("city"),
     zip: formData.get("zip") ?? "",
     timeline: formData.get("timeline"),

@@ -15,7 +15,7 @@ The product name and the listing plan labels live in [`lib/config.ts`](lib/confi
 
 ## Local setup
 
-You need Node.js 20.12 or newer.
+You need Node.js 22.12 or newer.
 
 ```bash
 npm install
@@ -29,7 +29,7 @@ npm run dev
 The app listens on [http://127.0.0.1:43123](http://127.0.0.1:43123). `http://localhost:43123` works too.
 
 - `npm install` also generates the Prisma client, through the `postinstall` script.
-- `npm run db:dev` runs Prisma's built-in Postgres, so there's nothing else to install. After a reboot, run it again before `npm run dev`; `npm run db:stop` stops it. The `DATABASE_URL` in `.env.example` points at it.
+- `npm run db:dev` runs Prisma's built-in Postgres, so there's nothing else to install. After a reboot, run it again before `npm run dev`; `npm run db:stop` stops it. If `db:dev` says a lock file is already being held just after a stop, wait a moment and run it again. The `DATABASE_URL` in `.env.example` points at it.
 - Emails aren't sent in development. They're printed in the terminal running `npm run dev`, so you can click a password-reset link from there.
 - The placeholder `AUTH_SECRET` from `.env.example` works on your own machine, but production refuses to start with it.
 
@@ -80,12 +80,12 @@ You'll need accounts with Render, Stripe and Resend, and a domain name.
 
 ### 1. Create the service on Render
 
-1. Push this repository to GitHub (it's private, so give Render's GitHub app access to it).
+1. Give Render's GitHub app access to this repository.
 2. In the Render Dashboard, choose **New > Blueprint** and pick the repository. Render reads `render.yaml` and creates the database and the web service.
 3. It asks for the values marked `sync: false`. Fill in `BUSINESS_LEGAL_NAME` and `CONTACT_EMAIL` now. The rest can wait: without Stripe, the listing page says subscriptions aren't available yet; without Resend, no emails go out.
 4. Render generates `AUTH_SECRET` and connects `DATABASE_URL` to the database itself.
 
-Each deploy installs, builds, applies new database migrations, and switches traffic over only once `/api/health` answers, so a failed deploy leaves the previous version running. Pushing to `main` deploys automatically.
+Each deploy installs, builds, applies new database migrations, and switches traffic over only once `/api/health` answers, so a failed deploy leaves the previous version running. A push to `main` deploys automatically once the [GitHub Actions checks](#testing) pass on it, so a failing check keeps the current version live.
 
 Don't run `npm run db:seed` against the live database; it refuses anyway.
 
@@ -148,6 +148,22 @@ At startup, production logs a `[config]` warning for anything missing, and exits
 - `npm run db:seed` — load sample Abilene businesses and contractors (local databases only)
 - `npm run db:reset` — drop the database, migrate, and seed. Prisma refuses to run this when an AI coding agent starts it, so run it yourself.
 - `npm run lint` — ESLint
+- `npm test` — run the tests once (`npm run test:watch` reruns them as you edit)
+
+## Testing
+
+`npm test` covers the rules that protect money and access: production can't fall into free listings, and the Stripe webhook rejects anything that isn't signed by Stripe. These tests need no database or Stripe account.
+
+The tests in [`test/billing.integration.test.ts`](test/billing.integration.test.ts) follow a Stripe subscription through to public search with real database queries, and they're skipped unless `TEST_DATABASE_URL` is set. To run them, start the local database and point that variable at it:
+
+```bash
+npm run db:dev
+TEST_DATABASE_URL="<the DATABASE_URL from your .env>" npm test
+```
+
+Copy the address exactly, including its `connection_limit=1`: the local database accepts one connection at a time, and without that setting these tests fail with a Prisma error. They refuse to run against a database that isn't on your machine, only touch rows they create, and remove those rows afterwards.
+
+GitHub Actions ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)) runs on every pull request and every push to `main`. It lints, applies the migrations to an empty Postgres database, checks that they match `schema.prisma`, runs all the tests, and does a production build, which also type-checks the project.
 
 ## Security and reliability
 
@@ -165,7 +181,11 @@ At startup, production logs a `[config]` warning for anything missing, and exits
 - **`overrides`** in `package.json` pins `deepmerge-ts`, used by Prisma's CLI, to 8.x, which fixes a security advisory in 7.x. Remove it once Prisma depends on 8.x itself.
 - **`engines`** in `package.json` sets the Node.js version, which Render also reads.
 
+### If a page keeps reloading in development
+
+After dependencies change, Next.js's saved development build can go stale, and every page reloads itself over and over without ever becoming clickable. Stop `npm run dev`, delete the `.next/dev` folder, and start it again. The folder is generated, so nothing is lost.
+
 ### Known install warnings
 
 - `eslint@9 ... no longer supported`. ESLint 10 is out, but `eslint-plugin-react`, `eslint-plugin-jsx-a11y` and `eslint-plugin-import`, which `eslint-config-next` uses, don't support it yet. Upgrade once they do.
-- `npm audit` reports high-severity advisories for `braces`. It's pulled in by development tools: the shadcn CLI, and Next's ESLint plugin through `fast-glob`. No patched version exists yet. The advisory concerns deeply nested glob patterns, and these tools only use the project's own patterns.
+- `npm audit` reports moderate and low advisories in development tools: the shadcn CLI and the TypeScript ESLint packages under `eslint-config-next`. Neither runs on the live site, and `npm audit --omit=dev`, which checks only what production needs, reports none. `npm audit fix --force` would downgrade shadcn, so don't use it here.

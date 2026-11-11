@@ -1,0 +1,62 @@
+name: CI
+
+on:
+  pull_request:
+  # render.yaml deploys a commit on main only once this workflow passes on it
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: key_city_listings
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    # A throwaway database and a made-up secret. Nothing here is used outside this job.
+    env:
+      DATABASE_URL: postgres://postgres:postgres@localhost:5432/key_city_listings
+      TEST_DATABASE_URL: postgres://postgres:postgres@localhost:5432/key_city_listings
+      AUTH_SECRET: ci-only-secret-not-used-anywhere-else
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Apply migrations to an empty database
+        run: npx prisma migrate deploy
+
+      - name: Check the migrations match schema.prisma
+        run: npx prisma migrate diff --from-url "$DATABASE_URL" --to-schema-datamodel prisma/schema.prisma --exit-code
+
+      - name: Test
+        run: npm test
+
+      # Also type-checks the project, so there's no separate tsc step
+      - name: Build
+        run: npm run build
