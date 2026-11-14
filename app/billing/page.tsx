@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Suspense } from "react";
 import { connection } from "next/server";
 import { redirect } from "next/navigation";
@@ -68,6 +69,15 @@ async function Billing({
         description="Businesses browse free. A contractor profile appears in search only while a listing subscription is active."
       />
       <div className="mb-6 grid gap-3">
+        {!session.emailVerified ? (
+          <Notice tone="warn">
+            Confirm your email address before subscribing.{" "}
+            <Link href="/verify-email" className="font-medium underline">
+              Get a new confirmation link
+            </Link>{" "}
+            if you can&apos;t find the first one.
+          </Notice>
+        ) : null}
         {mode === "mock" ? (
           <Notice tone="info">
             Billing is in local mock mode. Activating a plan here does not charge a card. Set BILLING_MODE=stripe and

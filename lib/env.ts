@@ -56,7 +56,9 @@ export function productionConfigProblems() {
     warnings.push("CONTACT_EMAIL or BUSINESS_LEGAL_NAME is not set, so the Terms, Privacy and Contact pages show placeholders.");
   }
   if (!process.env.RESEND_API_KEY || !process.env.EMAIL_FROM) {
-    warnings.push("RESEND_API_KEY or EMAIL_FROM is not set, so password-reset and message emails are not sent.");
+    warnings.push(
+      "RESEND_API_KEY or EMAIL_FROM is not set, so no email goes out: new accounts can't confirm their email address, and password resets and message emails aren't sent.",
+    );
   }
   return { fatal, warnings };
 }

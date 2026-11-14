@@ -30,7 +30,7 @@ The app listens on [http://127.0.0.1:43123](http://127.0.0.1:43123). `http://loc
 
 - `npm install` also generates the Prisma client, through the `postinstall` script.
 - `npm run db:dev` runs Prisma's built-in Postgres, so there's nothing else to install. After a reboot, run it again before `npm run dev`; `npm run db:stop` stops it. If `db:dev` says a lock file is already being held just after a stop, wait a moment and run it again. The `DATABASE_URL` in `.env.example` points at it.
-- Emails aren't sent in development. They're printed in the terminal running `npm run dev`, so you can click a password-reset link from there.
+- Emails aren't sent in development. They're printed in the terminal running `npm run dev`, so you can click a password-reset or email-confirmation link from there. The sample accounts are already confirmed.
 - The placeholder `AUTH_SECRET` from `.env.example` works on your own machine, but production refuses to start with it.
 
 `npm run db:seed` wipes and recreates the sample data, and refuses to run against any database that isn't on your machine. Every sample account uses the password `keycitylistings`. On your machine, the login page also has one-click buttons for two of them.
@@ -82,7 +82,7 @@ You'll need accounts with Render, Stripe and Resend, and a domain name.
 
 1. Give Render's GitHub app access to this repository.
 2. In the Render Dashboard, choose **New > Blueprint** and pick the repository. Render reads `render.yaml` and creates the database and the web service.
-3. It asks for the values marked `sync: false`. Fill in `BUSINESS_LEGAL_NAME` and `CONTACT_EMAIL` now. The rest can wait: without Stripe, the listing page says subscriptions aren't available yet; without Resend, no emails go out.
+3. It asks for the values marked `sync: false`. Fill in `BUSINESS_LEGAL_NAME` and `CONTACT_EMAIL` now. The rest can wait: without Stripe, the listing page says subscriptions aren't available yet; without Resend, no emails go out. That includes the link new accounts need to confirm their email address, so set up email before you invite anyone.
 4. Render generates `AUTH_SECRET` and connects `DATABASE_URL` to the database itself.
 
 Each deploy installs, builds, applies new database migrations, and switches traffic over only once `/api/health` answers, so a failed deploy leaves the previous version running. A push to `main` deploys automatically once the [GitHub Actions checks](#testing) pass on it, so a failing check keeps the current version live.
@@ -110,7 +110,7 @@ Stripe reviews your website before switching on live payments. The Terms, Privac
 2. Create an API key with sending access and put it in `RESEND_API_KEY`.
 3. Set `EMAIL_FROM` to an address on that domain, such as `Key City Listings <hello@yourdomain.com>`.
 
-Try "Forgot your password?" on the login page to check it.
+Try "Forgot your password?" on the login page, and sign up with a fresh address to check the confirmation email arrives.
 
 ### 4. Connect your domain
 
@@ -132,7 +132,7 @@ Add the domain under the web service's **Settings > Custom Domains** and create 
 | `BUSINESS_LEGAL_NAME`, `CONTACT_EMAIL` | Yes | Shown on the Terms, Privacy and Contact pages |
 | `BILLING_MODE` | Set to `stripe` | `mock` is for development |
 | `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PRICE_BASIC`, `STRIPE_PRICE_FEATURED` | For subscriptions | See [Set up Stripe](#2-set-up-stripe) |
-| `RESEND_API_KEY`, `EMAIL_FROM` | For email | See [Set up email](#3-set-up-email) |
+| `RESEND_API_KEY`, `EMAIL_FROM` | Before anyone signs up | Email confirmation links, password resets and message emails. See [Set up email](#3-set-up-email) |
 | `ERROR_ALERT_WEBHOOK_URL` | Optional | Slack or Discord webhook for error alerts |
 | `ALLOW_MOCK_BILLING`, `ENABLE_DEMO_LOGINS`, `ALLOW_REMOTE_SEED` | No | Overrides for a private staging site only |
 
@@ -154,7 +154,7 @@ At startup, production logs a `[config]` warning for anything missing, and exits
 
 `npm test` covers the rules that protect money and access: production can't fall into free listings, and the Stripe webhook rejects anything that isn't signed by Stripe. These tests need no database or Stripe account.
 
-The tests in [`test/billing.integration.test.ts`](test/billing.integration.test.ts) follow a Stripe subscription through to public search with real database queries, and they're skipped unless `TEST_DATABASE_URL` is set. To run them, start the local database and point that variable at it:
+The `*.integration.test.ts` files run real database queries: [`billing`](test/billing.integration.test.ts) follows a Stripe subscription through to public search, and [`email-verification`](test/email-verification.integration.test.ts) checks confirmation links. They're skipped unless `TEST_DATABASE_URL` is set. To run them, start the local database and point that variable at it:
 
 ```bash
 npm run db:dev
@@ -169,6 +169,7 @@ GitHub Actions ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)) runs on 
 
 - **Rate limits**, stored in the database: 10 login attempts per email and 30 per IP address every 15 minutes, 5 sign-ups per IP per hour, 3 reset emails per address per hour, 30 messages per user per 10 minutes, 20 new conversations and 10 job posts per user per hour.
 - **Password resets** use a random token that works once and expires in an hour; only its hash is stored. Resetting a password signs out every device logged in to that account.
+- **Email confirmation.** A new account gets a link that expires in 24 hours; only its hash is stored, and sending a new one cancels the old. Until they confirm, people can look around and fill in their profile, but they can't post jobs, send messages or subscribe to a listing, and they get no message emails. The link opens a page with a Confirm button, so mail scanners that open links don't confirm on the person's behalf. A password reset also confirms the address. Accounts made before this existed count as confirmed.
 - **Security headers** on every response, set in `next.config.ts`: a Content Security Policy (without nonces, which would switch off this app's prerendered pages), clickjacking protection, a strict referrer policy so reset links never leak, and HSTS once the site is on HTTPS.
 - **Errors** are written to the log as one JSON line each (`instrumentation.ts`), with an optional alert webhook.
 - `/api/health` checks the database; Render uses it to decide when a deploy is ready. `robots.txt` and `sitemap.xml` are generated per request.

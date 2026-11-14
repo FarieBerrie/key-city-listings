@@ -7,6 +7,7 @@ import { z } from "zod";
 
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { CONFIRM_EMAIL_FIRST } from "@/lib/email-verification";
 import { isListingPublic } from "@/lib/listing";
 import { notifyNewMessage } from "@/lib/notifications";
 import { rateLimit, retryMessage } from "@/lib/rate-limit";
@@ -44,6 +45,7 @@ export async function startConversation(formData: FormData) {
   const contractorUserId = String(formData.get("contractorUserId") ?? "");
   const next = jobId ? `/jobs/${jobId}` : "/contractors";
   if (!session) redirect(`/login?next=${encodeURIComponent(next)}`);
+  if (!session.emailVerified) redirect("/verify-email");
   const limit = await rateLimit(`thread:user:${session.id}`, 20, 60 * 60);
   if (!limit.ok) redirect(next);
 
@@ -78,6 +80,7 @@ export async function startConversation(formData: FormData) {
 export async function sendMessage(prev: MessageState, formData: FormData): Promise<MessageState> {
   const session = await getSession();
   if (!session) return { error: "Log in again to send this.", sent: prev.sent };
+  if (!session.emailVerified) return { error: CONFIRM_EMAIL_FIRST, sent: prev.sent };
 
   const limit = await rateLimit(`message:user:${session.id}`, 30, 10 * 60);
   if (!limit.ok) return { error: retryMessage(limit.retryAfterSeconds), sent: prev.sent };

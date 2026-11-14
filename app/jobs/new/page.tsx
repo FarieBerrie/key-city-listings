@@ -38,6 +38,21 @@ async function NewJob() {
     );
   }
 
+  if (!session.emailVerified) {
+    return (
+      <Container className="max-w-xl">
+        <PageHeading title="Post a job" />
+        <Notice tone="warn">
+          Confirm your email address before posting a job.{" "}
+          <Link href="/verify-email" className="font-medium underline">
+            Get a new confirmation link
+          </Link>{" "}
+          if you can&apos;t find the first one.
+        </Notice>
+      </Container>
+    );
+  }
+
   return (
     <Container className="max-w-2xl">
       <PageHeading

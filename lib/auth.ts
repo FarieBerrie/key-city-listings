@@ -13,6 +13,8 @@ export type SessionUser = {
   email: string;
   name: string;
   role: "CONTRACTOR" | "CUSTOMER";
+  /** False until they confirm their email address */
+  emailVerified: boolean;
 };
 
 function secretKey() {
@@ -25,7 +27,7 @@ function secretKey() {
  * Signs the user in. `sessionVersion` is the user's current value: changing the password bumps
  * it, which makes every cookie signed with the old value stop working.
  */
-export async function createSession(user: SessionUser, sessionVersion: number) {
+export async function createSession(user: Omit<SessionUser, "emailVerified">, sessionVersion: number) {
   const token = await new SignJWT({
     email: user.email,
     name: user.name,
@@ -64,7 +66,7 @@ export async function getSession(): Promise<SessionUser | null> {
     if (payload.sub == null || (role !== "CONTRACTOR" && role !== "CUSTOMER")) return null;
     const user = await prisma.user.findUnique({
       where: { id: payload.sub },
-      select: { id: true, email: true, name: true, role: true, sessionVersion: true },
+      select: { id: true, email: true, name: true, role: true, sessionVersion: true, emailVerifiedAt: true },
     });
     if (!user || (user.role !== "CONTRACTOR" && user.role !== "CUSTOMER")) return null;
     // Signed before the last password change (cookies from before this check count as version 0)
@@ -74,6 +76,7 @@ export async function getSession(): Promise<SessionUser | null> {
       email: user.email,
       name: user.name,
       role: user.role,
+      emailVerified: user.emailVerifiedAt !== null,
     };
   } catch {
     return null;

@@ -28,6 +28,7 @@ export async function startCheckout(formData: FormData) {
   if (getBillingMode() !== "stripe") redirect("/billing");
 
   const { session, profile } = await requireContractor();
+  if (!session.emailVerified) redirect("/verify-email");
   // A second Checkout would start a second subscription and bill twice. Changing plans on a live
   // subscription happens in Stripe's customer portal instead.
   if (hasLiveSubscription(profile.listing)) await redirectToPortal(profile.listing?.stripeCustomerId);
@@ -84,7 +85,8 @@ export async function openBillingPortal() {
 
 export async function setMockListing(formData: FormData) {
   if (getBillingMode() !== "mock") redirect("/billing");
-  const { profile } = await requireContractor();
+  const { session, profile } = await requireContractor();
+  if (!session.emailVerified) redirect("/verify-email");
   const active = formData.get("active") === "1";
   const tierValue = String(formData.get("tier") ?? "BASIC");
   const tier: ListingTier = isListingTier(tierValue) ? tierValue : "BASIC";
